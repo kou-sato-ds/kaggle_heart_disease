@@ -1,73 +1,71 @@
 import pandas as pd
 import numpy as np
-import zipfile
-from sklearn.ensemble import RandomForestClassifier
+import lightgbm as lgb
 from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import LabelEncoder
-
+from sklearn.metrics import roc_auc_score
 # ==========================================
 # 1. DATA LOADING
 # ==========================================
-# ※パスはご自身の環境に合わせて調整してください
-try:
-    with zipfile.ZipFile('playground-series-s6e2.zip', 'r') as z:
-        z.extractall('data')
-    train = pd.read_csv('data/train.csv')
-    test = pd.read_csv('data/test.csv')
-except FileNotFoundError:
-    print("Zipファイルが見つかりません。パスを確認してください。")
+train = pd.read_csv('data/train.csv')
+test = pd.read_csv('data/test.csv')
 
 # ==========================================
-# 2. PREPROCESSING (堅牢化Ver.)
+# 2. FEATURES (Iteration 18: Feature Engineering)
 # ==========================================
-def preprocess(df):
+def create_features(df):
     df = df.copy()
-    # 特徴量生成
-    df['RPP'] = df['Max HR'] * df['Systolic BP']
-    
-    # 数値列の欠損値処理（中央値埋め）
-    num_cols = df.select_dtypes(exclude='object').columns
-    df[num_cols] = df[num_cols].fillna(df[num_cols].median())
+    df['BP_HR_Risk'] = df['Systolic BP'] * df['Max HR']
+
+    cat_cols = df.select_dtypes(include=['object']).columns
+    for col in cat_cols:
+        if col != 'Heart Disease':
+            df[col] = df[col].astype('category')
     return df
 
-train = preprocess(train)
-test = preprocess(test)
+train = create_features(train)
+test = create_features(test)
 
-# ==========================================
-# 3. ENCODING (ラベル一致の儀式)
-# ==========================================
-cat_cols = train.select_dtypes(include=['object']).columns
-for col in cat_cols:
-    if col == 'Heart Disease': continue
-    le = LabelEncoder()
-    # 訓練とテストを合体させてからFit
-    full_labels = pd.concat([train[col].astype(str), test[col].astype(str)])
-    le.fit(full_labels)
-    train[col] = le.transform(train[col].astype(str))
-    test[col] = le.transform(test[col].astype(str))
-
-# 特徴量とターゲットの分離
-X = train.drop(['id', 'Heart Disease'], axis=1, errors='ignore')
+X = train.drop(['id', 'Heart Disease'], axis=1)
 y = train['Heart Disease'].map({'Presence': 1, 'Absence': 0})
-X_test = test.drop(['id'], axis=1, errors='ignore')
-
-# 列の並びを合わせる
-X, X_test = X.align(X_test, join='left', axis=1, fill_value=0)
+X_test = test.drop(['id'], axis=1)
 
 # ==========================================
-# 4. CROSS VALIDATION & SUBMIT
+# 3. K-FOLD STRATIFIED SPLIT & TRAINING
 # ==========================================
-seeds = [42, 2026]
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=2026)
 test_preds = np.zeros(len(X_test))
+oof_preds = np.zeros(len(X))
 
-for seed in seeds:
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
-    for tr_idx, val_idx in skf.split(X, y):
-        model = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=seed, n_jobs=-1)
-        model.fit(X.iloc[tr_idx], y.iloc[tr_idx])
-        test_preds += model.predict_proba(X_test)[:, 1] / (5 * len(seeds))
+# LightGBMのパラメータ
+lgb_params = {
+    'objective': 'binary',
+    'metric': 'auc',
+    'verbosity': -1,
+    'boosting_type': 'gbdt',
+    'random_state': 2026,
+    'learning_rate': 0.05,
+    'num_leaves': 31,
+}
 
-# 保存
+for fold, (tr_idx, val_idx) in enumerate(folds.split(X, y)):
+    X_tr, X_val = X.iloc[tr_idx], X.iloc[val_idx]
+    y_tr, y_val = y.iloc[tr_idx], y.iloc[val_idx]
+
+    model = lgb.LGBMClassifier(**lgb_params)
+    model.fit(
+        X_tr, y_tr,
+        eval_set=[(X_val, y_val)],
+        callbacks =[lgb.early_stopping(stopping_rounds=50)]
+    )
+
+    oof_preds[val_idx] = model.predict_proba(X_val)[:, 1]
+    test_preds += model.predict_proba(X_test)[:, 1] / folds.n_splits
+
+print(f"OOF AUC Score: {roc_auc_score(y, oof_preds):.4f}")
+
+# ==========================================
+# 4. SUBMIT
+# ==========================================
 submission = pd.DataFrame({'id': test['id'], 'Heart Disease': test_preds})
-submission.to_csv('sub_v17.csv', index=False)
-print("Finished: sub_v17.csv generated.")
+submission.to_csv('sub_v18.csv', index=False)
+print("V18: LightGMB submission file created.")
