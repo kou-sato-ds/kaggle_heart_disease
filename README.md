@@ -51,3 +51,23 @@ Today, I successfully implemented **Ensemble Learning (Blending)** and achieved 
 ### 💡 Future Roadmap
 - **External Data Integration**: Plan to merge the original UCI clinical dataset to improve model robustness.
 - **AutoML Exploration**: Experiment with **AutoGluon** for automated hyperparameter tuning and advanced stacking.
+
+## 🚀 Update: 2026-02-14 (Iteration 21)
+Implemented a sophisticated **Stacking Ensemble** and prepared for **AutoML integration** with real-world clinical data.
+
+### 🛠️ Key Achievements
+1. **Advanced Stacking (V21)**:
+   - Integrated **LightGBM** and **XGBoost (Native API)** as base models.
+   - Utilized **Logistic Regression** as a meta-model to intelligently blend predictions based on Out-Of-Fold (OOF) validation scores.
+   - Achieved a more robust prediction pipeline compared to simple averaging.
+
+2. **Data Enrichment Strategy**:
+   - Identified and prepared two major **UCI Heart Disease datasets** (373 & 207 votes) to supplement synthetic training data.
+   - Focused on "Data Alignment" (feature renaming and mapping) to ensure seamless integration.
+
+### 📈 Score Progression
+- **V20 (Blending)**: AUC 0.95339
+- **V21 (Stacking)**: **AUC 0.95348 (Current Best)**
+
+### 💡 Next Mission: AutoML Conquest
+Tomorrow, I will leverage **AutoGluon** to perform multi-layer stacking using the full dataset (Kaggle + UCI). This aims to break into the **Silver Tier** by maximizing both human domain knowledge and automated model optimization.
