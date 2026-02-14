@@ -115,3 +115,11 @@ With the implementation skills gained here, I am moving to **SIGNATE** to solve 
 - **Next Step**: Moving to **SIGNATE** to apply these implementation skills to Japanese industrial data. 
 
 *Thank you, Kaggle! Ready for the next challenge in the Japanese data science community.*
+
+## 🏁 Kaggle Completion & Transition
+Successfully finalized the Heart Disease project with V22. 
+Key takeaway: Advanced data preprocessing and AutoML integration.
+
+### 🚗 New Goal: SIGNATE Car Mileage Prediction
+Moving forward to the **SIGNATE** platform. 
+I will tackle the **Car Mileage Prediction** challenge to master "Regression" tasks using my "Golden 6 Steps" framework.
