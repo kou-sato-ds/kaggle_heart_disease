@@ -27,3 +27,27 @@ In this version, I focused on building a "hard-to-break" implementation:
 ## 📂 Project Structure
 - `main.py`: Main script for preprocessing, training, and generating submission files.
 - `data/`: Dataset folder (managed locally).
+
+## 🚀 Update: 2026-02-14 (Iteration 18-20)
+Today, I successfully implemented **Ensemble Learning (Blending)** and achieved a new **Personal Best score (AUC: 0.95339)**.
+
+### 🛠️ Key Achievements
+1. **Algorithm Diversification**:
+   - Implemented and compared **LightGBM (V18)** and **XGBoost (V19)**.
+   - Deepened my understanding of how different gradient boosting frameworks handle categorical data and missing values.
+
+2. **Blending Ensemble (V20)**:
+   - Combined predictions from LGBM and XGBoost using a 50:50 weighted average.
+   - This technique effectively balanced the individual biases of each model, enhancing overall generalization.
+
+3. **Feature Engineering**:
+   - Created `BP_HR_Risk` (Interaction between Systolic BP and Max HR) to capture critical health indicators.
+
+### 📈 Score Progression
+- **V18 (LightGBM)**: AUC 0.95168
+- **V19 (XGBoost)**: AUC 0.95326
+- **V20 (Ensemble)**: **AUC 0.95339 (Personal Best)**
+
+### 💡 Future Roadmap
+- **External Data Integration**: Plan to merge the original UCI clinical dataset to improve model robustness.
+- **AutoML Exploration**: Experiment with **AutoGluon** for automated hyperparameter tuning and advanced stacking.
